@@ -1,6 +1,9 @@
 import express from "express";
 import ProductsModel from "../db/tables/productsTable.js";
 import createHttpError from "http-errors";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import multer from "multer";
 // import { reviewModel } from "../db/tables/productsTable.js";
 // import databaseObj from "../db/tables/index.js";
 // import s from "sequelize";
@@ -8,17 +11,44 @@ import createHttpError from "http-errors";
 
 import q2m from "query-to-mongo";
 
+const { CLOUDINARY_NAME, CLOUDINARY_KEY, CLOUDINARY_SECRET } = process.env;
+
+cloudinary.config({
+  cloud_name: CLOUDINARY_NAME,
+  api_key: CLOUDINARY_KEY,
+  api_secret: CLOUDINARY_SECRET,
+});
+
+// const storage = new CloudinaryStorage({
+//   cloudinary: cloudinary,
+// });
+
+const cloudinaryStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "amazon-products",
+  },
+});
+
+// const { CLOUDINARY_NAME, CLOUDINARY_KEY, CLOUDINARY_SECRET } = process.env;
+
 // const { Products, Reviews, Categories, ProductCategories, Users } = databaseObj;
 
 const productsRouter = express.Router();
 
 productsRouter.get("/", async (req, res, next) => {
   try {
-    const products = await ProductsModel.find();
-
+    // const roducts = await ProductsModel.find();
     const mongoQuery = q2m(req.query);
-    console.log(mongoQuery);
-    res.send(products);
+    const { totalProducts, products } = await ProductsModel.findProducts(
+      mongoQuery
+    );
+    res.send({
+      links: mongoQuery.links("/products", totalProducts),
+      totalProducts,
+      pageTotal: Math.ceil(totalProducts / mongoQuery.options.limit),
+      products,
+    });
   } catch (error) {
     console.log(error);
     next(error);
@@ -187,5 +217,50 @@ productsRouter.delete("/:id/reviews/:reviewId", async (req, res, next) => {
     next(error);
   }
 });
+
+// productsRouter.put(
+//   "/:id/imageUpload",
+//   multer({ storage: cloudinaryStorage }).single("product"),
+//   async (req, res, next) => {
+//     try {
+//       const products = await ProductsModel.find();
+//       const index = products.findIndex((p) => p.id === req.params.id);
+//       let productToBeUpdated = products[index];
+//       console.log(index);
+//       const newImage = { image_url: req.file.path };
+//       console.log(newImage);
+//       const updatedProduct = { ...productToBeUpdated.toObject(), ...newImage };
+//       console.log(updatedProduct);
+//       products[index] = updatedProduct;
+//       const productToSave = products[index];
+//       await products.save();
+//       res.send(productToSave);
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+// );
+
+productsRouter.put(
+  "/:id/imageUpload",
+  multer({ storage: cloudinaryStorage }).single("product"),
+  async (req, res, next) => {
+    try {
+      let product = await ProductsModel.findById(req.params.id);
+
+      const newImage = { image_url: req.file.path };
+      console.log(newImage);
+      const updatedProduct = { ...product.toObject(), ...newImage };
+      console.log(updatedProduct);
+      product = updatedProduct;
+      // const { _id } = await pro.save(
+
+      const { _id } = await product.save();
+      res.send(_id);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 export default productsRouter;

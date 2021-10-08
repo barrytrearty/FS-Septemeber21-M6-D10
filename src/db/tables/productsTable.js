@@ -23,4 +23,24 @@ const ProductsModel = new Schema({
   reviews: [reviewModel],
 });
 
+ProductsModel.static("findProducts", async function (mongoQuery) {
+  const totalProducts = await this.countDocuments(mongoQuery.criteria);
+  const products = await this.find(
+    mongoQuery.criteria,
+    mongoQuery.options.fields
+  )
+    .limit(mongoQuery.options.limit)
+    .skip(mongoQuery.options.skip)
+    .sort(mongoQuery.options.sort);
+  // .populate({ path: "authors" });
+  return {
+    totalProducts,
+    products,
+  };
+  // mongoQuery.links("/", totalProducts),
+  // totalProducts,
+  // pageTotal: Math.ceil(totalProducts / mongoQuery.options.limit)
+  // )
+});
+
 export default model("products", ProductsModel);
