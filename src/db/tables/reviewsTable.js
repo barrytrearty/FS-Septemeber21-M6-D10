@@ -1,16 +1,17 @@
-import sequelize from "../index.js";
+import mongoose from "mongoose";
 
-import s from "sequelize";
-const { DataTypes } = s;
+const { Schema, model } = mongoose;
 
-const Reviews = sequelize.define(
-  "reviews",
+const reviewModel = new Schema(
   {
-    id: { primaryKey: true, type: DataTypes.INTEGER, autoIncrement: true },
-    text: { type: DataTypes.TEXT, allowNull: false },
-    // username: { type: DataTypes.STRING, allowNull: false },
+    reviews: {
+      comment: { type: String, required: true },
+      rate: { type: Number, required: true, enum: [1, 2, 3, 4, 5] },
+    },
   },
-  { timestamps: false }
+  {
+    timestamps: true,
+  }
 );
 
-export default Reviews;
+export default model("review", reviewModel);

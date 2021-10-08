@@ -1,18 +1,26 @@
-import sequelize from "../index.js";
+import mongoose from "mongoose";
+const { Schema, model } = mongoose;
 
-import s from "sequelize";
-const { DataTypes } = s;
-
-const Products = sequelize.define("products", {
-  id: { primaryKey: true, type: DataTypes.INTEGER, autoIncrement: true },
-  name: { type: DataTypes.STRING, allowNull: false },
-  price: { type: DataTypes.FLOAT, allowNull: false },
-  image_url: {
-    type: DataTypes.TEXT,
-    defaultValue:
-      "https://res.cloudinary.com/btrearty/image/upload/v1632321701/blogPosts/hw8ax6kxbb2vn00pi9ik.webp",
+const reviewModel = new Schema(
+  {
+    comment: { type: String, required: true },
+    rate: { type: Number, required: true, enum: [1, 2, 3, 4, 5] },
   },
-  // category: { type: DataTypes.STRING, allowNull: false },
+  {
+    timestamps: true,
+  }
+);
+
+const ProductsModel = new Schema({
+  description: { type: String, required: true },
+  name: { type: String, required: true },
+  brand: { type: String, required: true },
+  price: { type: Number, required: true },
+  image_url: {
+    type: String,
+  },
+  category: { type: String, required: true },
+  reviews: [reviewModel],
 });
 
-export default Products;
+export default model("products", ProductsModel);

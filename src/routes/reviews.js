@@ -65,4 +65,6 @@ reviewsRouter.delete("/:id", async (req, res, next) => {
   }
 });
 
+reviewsRouter.get("/", async (req, res, next) => {});
+
 export default reviewsRouter;
