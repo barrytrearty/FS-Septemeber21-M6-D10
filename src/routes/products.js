@@ -246,17 +246,11 @@ productsRouter.put(
   multer({ storage: cloudinaryStorage }).single("product"),
   async (req, res, next) => {
     try {
-      let product = await ProductsModel.findById(req.params.id);
+      let product = await ProductsModel.findByIdAndUpdate(req.params.id, {
+        image_url: req.file.path,
+      });
 
-      const newImage = { image_url: req.file.path };
-      console.log(newImage);
-      const updatedProduct = { ...product.toObject(), ...newImage };
-      console.log(updatedProduct);
-      product = updatedProduct;
-      // const { _id } = await pro.save(
-
-      const { _id } = await product.save();
-      res.send(_id);
+      res.send(product._id);
     } catch (error) {
       next(error);
     }
